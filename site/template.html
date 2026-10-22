@@ -109,9 +109,10 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
     <div class="bar" id="bar"></div>
     <p class="note" id="votes"></p>
   </section>
+  <section class="panel"><h2>Evolução da projeção</h2><div id="evo" style="height:340px"></div><p class="note">Recalculada para cada dia com as pesquisas que já tinham saído até aquela data (última rodada de cada instituto, meia-vida de 3 dias) e os ajustes atuais do painel. A faixa azul é o intervalo 25–75%. Arraste a barra inferior para dar zoom.</p></section>
   <div class="two">
-    <section class="panel"><h2>Distribuição simulada</h2><svg id="hist" viewBox="0 0 440 210" width="100%"></svg></section>
-    <section class="panel"><h2>Ritmo de apuração projetado</h2><svg id="curve" viewBox="0 0 440 210" width="100%"></svg>
+    <section class="panel"><h2>Distribuição simulada</h2><div id="hist" style="height:240px"></div></section>
+    <section class="panel"><h2>Ritmo de apuração projetado</h2><div id="curve" style="height:240px"></div>
     <p class="note">Formato do 1º turno: Sul, Sudeste e Centro-Oeste chegam antes; Nordeste depois. A curva termina na mediana.</p></section>
   </div>
   <div class="two">
@@ -166,7 +167,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
   <h2>Pesquisas do 2º turno (votos válidos)</h2>
   <div class="tbl"><table id="pT"></table></div>
   <p class="note">Pontos cheios: última rodada de cada instituto (entra na média). Pontos claros: rodadas anteriores. Círculos verdes: valor reponderado PNAD. Coluna PNAD: voto reponderado pela distribuição de renda da PNAD Contínua, conforme cálculo publicado pelo <a href="https://brasil.arvor.co/reponderacao_pnad.html" target="_blank" rel="noopener" style="color:var(--fg)">Arvor</a> (<span id="npn"></span>). Sem cruzamento de renda, a pesquisa entra com o número publicado. Média ponderada por recência (meia-vida de 3 dias, contada a partir do fim do campo), só a última rodada de cada instituto. Pesquisas em votos totais são convertidas excluindo brancos, nulos e indecisos.</p>
-  <svg id="pChart" viewBox="0 0 640 220" width="100%"></svg>
+  <div id="pChart" style="height:320px"></div>
 </div>
 </section>
 
@@ -242,6 +243,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 <div id="tip" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
 const UF=__DATA__; // [Flávio, Lula, Cury, Renan, Caiado, Outros]
@@ -255,7 +257,7 @@ const f1=x=>x.toFixed(1).replace(".",","),f2=x=>x.toFixed(2).replace(".",","),fi
 
 /* ---------- abas ---------- */
 const TABS=["simulador","mapa","primeiro","pesquisas","metodologia"];
-function showTab(t){if(!TABS.includes(t))t="simulador";TABS.forEach(x=>$("t-"+x).hidden=x!==t);document.querySelectorAll("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.t===t));if(t==="mapa")drawMun()}
+function showTab(t){if(!TABS.includes(t))t="simulador";TABS.forEach(x=>$("t-"+x).hidden=x!==t);document.querySelectorAll("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.t===t));if(t==="mapa")drawMun();requestAnimationFrame(()=>Object.values(EC).forEach(c=>c.resize()))}
 window.addEventListener("hashchange",()=>showTab(location.hash.slice(1)));
 
 /* ---------- pesquisas ---------- */
@@ -298,9 +300,44 @@ function run(){for(const k in P){const o=$("o-"+k);if(o)o.textContent=k==="poll"
   $("kP").textContent=f1(S.prob)+"%";$("kM").textContent=f2(S.med)+"%";$("kI").textContent=f1(S.q25)+"–"+f1(S.q75);$("kT").textContent=f2(NT.p)+"%";
   $("bar").innerHTML=`<div style="width:${S.med}%;background:var(--f)">Flávio ${f1(S.med)}%</div><div style="flex:1;background:var(--l);justify-content:flex-end">Lula ${f1(100-S.med)}%</div>`;
   $("votes").textContent=`Com ~${fi(NT.s/1e6)} milhões de votos válidos, a mediana equivale a uma diferença de ~${f1(Math.abs(S.med-50)*2*NT.s/1e8)} milhões de votos.`;
-  hist();curve();ufmap();uftable();sens();if(!$("t-mapa").hidden)drawMun()}
-function hist(){const lo=44,hi=60,bins=64,h=new Array(bins).fill(0);for(const x of S.a){const b=Math.floor((x-lo)/(hi-lo)*bins);if(b>=0&&b<bins)h[b]++}const mx=Math.max(...h),W=400,H=160,x0=30,y0=180,X=v=>x0+(v-lo)/(hi-lo)*W;let g="";h.forEach((c,i)=>{const x=lo+(i+.5)*(hi-lo)/bins;g+=`<rect x="${x0+i*W/bins}" y="${y0-c/mx*H}" width="${W/bins-1}" height="${c/mx*H}" fill="${x>50?"var(--f)":"var(--l)"}" opacity=".85"/>`});for(let v=44;v<=60;v+=2)g+=`<text x="${X(v)}" y="198" text-anchor="middle">${v}</text>`;g+=`<line x1="${X(50)}" x2="${X(50)}" y1="12" y2="${y0}" stroke="var(--fg)" stroke-dasharray="3 3"/><line x1="${X(S.med)}" x2="${X(S.med)}" y1="12" y2="${y0}" stroke="var(--accent)" stroke-width="2"/><text x="${X(S.med)+4}" y="22" style="fill:var(--accent)">mediana ${f2(S.med)}</text>`;$("hist").innerHTML=g}
-function curve(){const off=x=>x<=22?5.6+.7*x/22:6.3*(1-(x-22)/78),end=(S.q75-S.q25)/1.35*1.1,hw=x=>2.3-(2.3-end)*x/100,lo=46,hi=64,W=390,H=170,x0=40,y0=185,X=x=>x0+x/100*W,Y=v=>y0-(v-lo)/(hi-lo)*H;let up="",dn="",ln="";for(let x=0;x<=100;x+=2){const m=S.med+off(x);up+=`${X(x)},${Y(m+hw(x))} `;dn=`${X(x)},${Y(m-hw(x))} `+dn;ln+=`${X(x)},${Y(m)} `}let g=`<polygon points="${up+dn}" fill="var(--f)" opacity=".15"/><polyline points="${ln}" fill="none" stroke="var(--f)" stroke-width="2.5"/><line x1="${x0}" x2="${x0+W}" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--l)" stroke-dasharray="4 3"/>`;for(let v=46;v<=64;v+=4)g+=`<text x="${x0-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;[0,25,50,75,100].forEach(x=>g+=`<text x="${X(x)}" y="203" text-anchor="middle">${x}%</text>`);g+=`<text x="${X(0)+4}" y="${Y(S.med+5.6)-10}" style="fill:var(--f)">início ${f1(S.med+5.6)}</text><text x="${X(100)-4}" y="${Y(S.med)-12}" text-anchor="end" style="fill:var(--f)">final ${f1(S.med)}</text>`;$("curve").innerHTML=g}
+  hist();curve();evolution();ufmap();uftable();sens();if(!$("t-mapa").hidden)drawMun()}
+const EC={};function ec(id){if(!EC[id]){EC[id]=echarts.init($(id),null,{renderer:"canvas"});addEventListener("resize",()=>EC[id].resize())}return EC[id]}
+const tok=n=>cs().getPropertyValue(n).trim();
+function base(){return{animationDuration:300,textStyle:{fontFamily:"Source Sans 3, system-ui, sans-serif",color:tok("--muted")},grid:{left:44,right:18,top:28,bottom:34},tooltip:{trigger:"axis",backgroundColor:tok("--panel"),borderColor:tok("--line"),textStyle:{color:tok("--fg")}}}}
+const ax=(o={})=>({axisLine:{lineStyle:{color:tok("--line")}},axisLabel:{color:tok("--muted"),fontFamily:"JetBrains Mono, monospace",fontSize:10},splitLine:{lineStyle:{color:tok("--line"),opacity:.6}},...o});
+function hist(){const lo=44,hi=60,bins=64,h=new Array(bins).fill(0);for(const x of S.a){const b=Math.floor((x-lo)/(hi-lo)*bins);if(b>=0&&b<bins)h[b]++}const n=S.a.length,cats=h.map((_,i)=>lo+(i+.5)*(hi-lo)/bins);
+  ec("hist").setOption({...base(),tooltip:{...base().tooltip,formatter:ps=>{const x=+ps[0].axisValue;const above=S.a.reduce?null:null;return `Flávio ${f2(x-.125)}–${f2(x+.125)}%<br>${f2(ps[0].value/n*100)}% das simulações`}},
+   xAxis:ax({type:"category",data:cats.map(c=>c.toFixed(2)),axisLabel:{color:tok("--muted"),fontSize:10,interval:7,formatter:v=>Math.round(v)}}),yAxis:ax({type:"value",show:false}),
+   series:[{type:"bar",barCategoryGap:"8%",data:h.map((c,i)=>({value:c,itemStyle:{color:cats[i]>50?tok("--f"):tok("--l"),opacity:.85}})),
+     emphasis:{itemStyle:{opacity:1}},markLine:{symbol:"none",silent:true,label:{color:tok("--accent"),formatter:"mediana {c}"},lineStyle:{color:tok("--accent"),width:2,type:"solid"},data:[{xAxis:Math.min(bins-1,Math.max(0,Math.floor((S.med-lo)/(hi-lo)*bins))),label:{formatter:"mediana "+f2(S.med)}},{xAxis:Math.floor((50-lo)/(hi-lo)*bins),lineStyle:{color:tok("--fg"),type:"dashed",width:1},label:{formatter:"50%",color:tok("--fg")}}]}}]},true)}
+function curve(){const off=x=>x<=22?5.6+.7*x/22:6.3*(1-(x-22)/78),end=(S.q75-S.q25)/1.35*1.1,hw=x=>2.3-(2.3-end)*x/100,xs=[];for(let x=0;x<=100;x+=2)xs.push(x);
+  const mid=xs.map(x=>+(S.med+off(x)).toFixed(2)),low=xs.map(x=>+(S.med+off(x)-hw(x)).toFixed(2)),band=xs.map(x=>+(2*hw(x)).toFixed(2));
+  ec("curve").setOption({...base(),tooltip:{...base().tooltip,formatter:ps=>{const i=ps[0].dataIndex;return `${xs[i]}% das seções apuradas<br><b>Flávio ${f1(mid[i])}%</b><br>faixa ${f1(low[i])}–${f1(low[i]+band[i])}`}},
+   xAxis:ax({type:"category",boundaryGap:false,data:xs,axisLabel:{color:tok("--muted"),fontSize:10,interval:12,formatter:v=>v+"%"}}),yAxis:ax({type:"value",min:46,max:64}),
+   series:[{type:"line",data:low,stack:"b",lineStyle:{opacity:0},symbol:"none",silent:true},{type:"line",data:band,stack:"b",lineStyle:{opacity:0},symbol:"none",areaStyle:{color:tok("--f"),opacity:.15},silent:true},
+     {name:"Flávio",type:"line",data:mid,symbol:"none",lineStyle:{color:tok("--f"),width:2.5},markLine:{symbol:"none",silent:true,data:[{yAxis:50}],lineStyle:{color:tok("--l"),type:"dashed"},label:{formatter:"50%",color:tok("--l")}}}]},true)}
+const Phi=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p};
+function evolution(){const days=[];const start=+new Date("2026-10-07");for(let d=start;d<=NOW;d+=DAY)days.push(d);const sd=Math.hypot(P.late,.8),adj=P.bias+P.lv+P.aval,tn=NT.p;
+  const pt=days.map(D=>{const last={};POLLS.forEach(p=>{const t=+new Date(p.campo_fim);if(t<=D){const k=p.instituto;if(!last[k]||t>+new Date(last[k].campo_fim))last[k]=p}});let sw=0,a=0,b=0,n=0;for(const p of Object.values(last)){const w=Math.pow(.5,(D-new Date(p.campo_fim))/DAY/3);sw+=w;a+=w*p.flavio_validos;b+=w*(p.flavio_pnad??p.flavio_validos);n++}
+    const mu=v=>(P.w/100)*(v+adj)+(1-P.w/100)*tn,m1=mu(a/sw),m2=mu(b/sw);return{d:new Date(D).toISOString().slice(5,10).split("-").reverse().join("/"),avg:a/sw,m1,m2,p1:Phi((m1-50)/sd)*100,p2:Phi((m2-50)/sd)*100,lo:m1-.674*sd,n}});
+  const scatter=POLLS.map(p=>[p.campo_fim.slice(5).split("-").reverse().join("/"),p.flavio_validos,p.instituto]);
+  ec("evo").setOption({...base(),grid:{left:44,right:50,top:40,bottom:56},legend:{top:0,textStyle:{color:tok("--muted")},data:["Mediana (publicada)","Mediana (PNAD)","Prob. Flávio (publicada)","Prob. Flávio (PNAD)","Pesquisas"]},
+   tooltip:{...base().tooltip,formatter:ps=>{const i=ps[0].dataIndex,r=pt[i];if(r==null)return"";return `<b>${r.d}</b> · ${r.n} institutos<br>Média das pesquisas ${f2(r.avg)}%<br>Mediana publicada <b>${f2(r.m1)}%</b> · PNAD <b>${f2(r.m2)}%</b><br>Prob. Flávio ${f1(r.p1)}% · PNAD ${f1(r.p2)}%`}},
+   dataZoom:[{type:"inside"},{type:"slider",height:16,bottom:8,borderColor:tok("--line"),textStyle:{color:tok("--muted")}}],
+   xAxis:ax({type:"category",data:pt.map(r=>r.d),boundaryGap:false}),yAxis:[ax({type:"value",min:48,max:56,name:"% Flávio",nameTextStyle:{color:tok("--muted")}}),ax({type:"value",min:0,max:100,name:"Prob.",splitLine:{show:false},axisLabel:{color:tok("--muted"),fontSize:10,formatter:"{value}%"}})],
+   series:[{type:"line",data:pt.map(r=>+r.lo.toFixed(2)),stack:"iqr",symbol:"none",lineStyle:{opacity:0},silent:true,tooltip:{show:false}},{type:"line",data:pt.map(r=>+(1.348*sd).toFixed(2)),stack:"iqr",symbol:"none",lineStyle:{opacity:0},areaStyle:{color:tok("--f"),opacity:.12},silent:true,tooltip:{show:false}},
+    {name:"Mediana (publicada)",type:"line",data:pt.map(r=>+r.m1.toFixed(2)),symbolSize:5,lineStyle:{color:tok("--f"),width:2.5},itemStyle:{color:tok("--f")},markLine:{symbol:"none",silent:true,data:[{yAxis:50}],lineStyle:{color:tok("--l"),type:"dashed"},label:{formatter:"50%",color:tok("--l")}}},
+    {name:"Mediana (PNAD)",type:"line",data:pt.map(r=>+r.m2.toFixed(2)),symbolSize:5,lineStyle:{color:tok("--accent"),width:2,type:"dashed"},itemStyle:{color:tok("--accent")}},
+    {name:"Prob. Flávio (publicada)",type:"line",yAxisIndex:1,data:pt.map(r=>+r.p1.toFixed(1)),symbol:"none",lineStyle:{color:tok("--muted"),width:1.5}},
+    {name:"Prob. Flávio (PNAD)",type:"line",yAxisIndex:1,data:pt.map(r=>+r.p2.toFixed(1)),symbol:"none",lineStyle:{color:tok("--muted"),width:1.5,type:"dotted"},itemStyle:{color:tok("--muted")}},
+    {name:"Pesquisas",type:"scatter",data:scatter.map(s=>({value:[s[0],s[1]],name:s[2]})),symbolSize:6,itemStyle:{color:tok("--f"),opacity:.3},tooltip:{trigger:"item",formatter:q=>`${q.name}<br>${q.value[0]} · Flávio ${f2(q.value[1])}%`}}]},true)}
+function pChart(){const cats=[...new Set(POLLS.map(p=>p.campo_fim))].sort(),lab=d=>d.slice(8,10)+"/"+d.slice(5,7),sw=SW;
+  ec("pChart").setOption({...base(),grid:{left:44,right:18,top:36,bottom:30},legend:{top:0,textStyle:{color:tok("--muted")}},tooltip:{trigger:"item",backgroundColor:tok("--panel"),borderColor:tok("--line"),textStyle:{color:tok("--fg")},formatter:q=>`<b>${q.data.inst}</b> · campo até ${q.value[0]}<br>${q.seriesName}: Flávio ${f2(q.value[1])}%${q.data.w?`<br>peso na média ${f1(q.data.w)}%`:""}`},
+   xAxis:ax({type:"category",data:cats.map(lab)}),yAxis:ax({type:"value",min:48,max:55}),
+   series:[{name:"Última rodada",type:"scatter",data:LAST.map(p=>({value:[lab(p.campo_fim),p.flavio_validos],inst:p.instituto,w:p.w/sw*100})),symbolSize:v=>8,itemStyle:{color:tok("--f"),opacity:.8},
+      markLine:{symbol:"none",silent:true,data:[{yAxis:+PAVG.toFixed(2),label:{formatter:"média "+f2(PAVG),color:tok("--f")},lineStyle:{color:tok("--f")}},{yAxis:+PAVG_PNAD.toFixed(2),label:{formatter:"PNAD "+f2(PAVG_PNAD),color:tok("--accent")},lineStyle:{color:tok("--accent"),type:"dashed"}},{yAxis:50,label:{formatter:"50%",color:tok("--l")},lineStyle:{color:tok("--l"),type:"dashed"}}]}},
+    {name:"Rodadas anteriores",type:"scatter",data:POLLS.filter(p=>!p.ultima).map(p=>({value:[lab(p.campo_fim),p.flavio_validos],inst:p.instituto})),symbolSize:6,itemStyle:{color:tok("--f"),opacity:.25}},
+    {name:"Reponderado PNAD",type:"scatter",data:LAST.filter(p=>p.flavio_pnad!=null).map(p=>({value:[lab(p.campo_fim),p.flavio_pnad],inst:p.instituto})),symbol:"emptyCircle",symbolSize:9,itemStyle:{color:tok("--accent"),borderWidth:2}}]},true)}
 const proj=t=>Math.max(1,Math.min(99,t.p+SHIFT));
 function ufmap(){let g="";for(const u in POS){const[r,c]=POS[u],p=proj(NT.by[u]),x=10+c*54,y=10+r*35;g+=`<g class="tile" data-u="${u}"><rect x="${x}" y="${y}" width="50" height="31" rx="3" fill="${col(p)}"/><text x="${x+25}" y="${y+14}" text-anchor="middle" style="fill:var(--fg);font-weight:600">${u=="ZZ"?"EXT":u}</text><text x="${x+25}" y="${y+26}" text-anchor="middle" style="fill:var(--fg)">${f1(p)}</text></g>`}const m=$("map");m.innerHTML=g;m.querySelectorAll(".tile").forEach(t=>t.onclick=()=>{const u=t.dataset.u,r=UF[u],tot=r.reduce((a,b)=>a+b);$("ufd").innerHTML=`<b>${u}</b> · 1º turno: Flávio ${f1(r[0]/tot*100)}% · Lula ${f1(r[1]/tot*100)}% · Cury ${f1(r[2]/tot*100)}% · Renan ${f1(r[3]/tot*100)}% · Caiado ${f1(r[4]/tot*100)}% → 2º turno projetado: Flávio <b>${f2(proj(NT.by[u]))}%</b>`})}
 let sortK="p",sortD=-1;
@@ -360,9 +397,7 @@ function quint(){const k=+$("qInd").value,arr=Object.entries(MUN).filter(([c])=>
 /* ---------- aba pesquisas ---------- */
 function pollsTab(){const rows=POLLS.slice().sort((a,b)=>(b.ultima-a.ultima)||(new Date(b.campo_fim)-new Date(a.campo_fim))),sw=SW;const dt=s=>s?s.slice(8,10)+"/"+s.slice(5,7):"–";
   $("npn")&&($("npn").textContent=NPNAD+" de "+LAST.length+" institutos com ajuste");$("pT").innerHTML=`<thead><tr><th>Instituto</th><th>Fim do campo</th><th>Divulgação</th><th>Flávio</th><th>Lula</th><th>Flávio PNAD</th><th>Δ PNAD</th><th>Margem</th><th>Peso</th><th>Obs.</th></tr></thead><tbody>${rows.map(p=>`<tr style="${p.ultima?"":"opacity:.55"}"><td><a href="${p.fonte}" target="_blank" rel="noopener" style="color:var(--fg)">${p.instituto}</a></td><td>${dt(p.campo_fim)}</td><td>${dt(p.divulgacao)}</td><td>${f1(p.flavio_validos)}</td><td>${f1(100-p.flavio_validos)}</td><td>${p.flavio_pnad!=null?f2(p.flavio_pnad):"–"}</td><td>${p.flavio_pnad!=null?(p.flavio_pnad>=p.flavio_validos?"+":"")+f2(p.flavio_pnad-p.flavio_validos):"–"}</td><td>${p.margem!=null?"±"+f1(p.margem):"–"}</td><td>${p.ultima?f1(p.w/sw*100)+"%":"rodada anterior"}</td><td class="note" style="text-align:left">${p.obs||""}</td></tr>`).join("")}<tr><td><b>Média ponderada</b></td><td></td><td></td><td><b>${f2(PAVG)}</b></td><td><b>${f2(100-PAVG)}</b></td><td><b>${f2(PAVG_PNAD)}</b></td><td><b>+${f2(PAVG_PNAD-PAVG)}</b></td><td></td><td></td><td></td></tr></tbody>`;
-  const d0=Math.min(...POLLS.map(p=>+new Date(p.campo_fim)))-DAY,d1=NOW+DAY,X=d=>50+(d-d0)/(d1-d0)*570,Y=v=>190-(v-48)/(55-48)*170;let g="";for(let v=48;v<=55;v+=1)g+=`<line x1="50" x2="620" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="44" y="${Y(v)+4}" text-anchor="end">${v}</text>`;g+=`<line x1="50" x2="620" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--l)" stroke-dasharray="4 3"/><line x1="50" x2="620" y1="${Y(PAVG)}" y2="${Y(PAVG)}" stroke="var(--accent)" stroke-width="2"/><text x="618" y="${Y(PAVG)-6}" text-anchor="end" style="fill:var(--accent)">média ${f2(PAVG)}</text>`;
-  POLLS.forEach(p=>{const x=X(+new Date(p.campo_fim)),y=Y(p.flavio_validos);g+=`<circle cx="${x}" cy="${y}" r="${p.ultima?4+p.w/sw*14:3}" fill="var(--f)" opacity="${p.ultima?.75:.25}"><title>${p.instituto} ${f2(p.flavio_validos)}</title></circle>`;if(p.flavio_pnad!=null&&p.ultima)g+=`<circle cx="${x}" cy="${Y(p.flavio_pnad)}" r="3.5" fill="none" stroke="var(--accent)" stroke-width="1.5"><title>${p.instituto} PNAD ${f2(p.flavio_pnad)}</title></circle>`});g+=`<line x1="50" x2="620" y1="${Y(PAVG_PNAD)}" y2="${Y(PAVG_PNAD)}" stroke="var(--accent)" stroke-dasharray="5 3"/><text x="618" y="${Y(PAVG_PNAD)-6}" text-anchor="end" style="fill:var(--accent)">PNAD ${f2(PAVG_PNAD)}</text>`;
-  for(let d=d0+DAY;d<d1;d+=2*DAY){const s=new Date(d).toISOString();g+=`<text x="${X(d)}" y="210" text-anchor="middle">${s.slice(8,10)}/${s.slice(5,7)}</text>`}$("pChart").innerHTML=g}
+  pChart()}
 
 mark("Base");run();firstRound();quint();$("qInd").onchange=quint;pollsTab();showTab(location.hash.slice(1));
 </script>
