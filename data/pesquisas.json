@@ -1,0 +1,8 @@
+[
+ {"instituto":"Indexa/Broadcast","campo_fim":"2026-10-21","divulgacao":"2026-10-22","flavio_validos":50.6,"margem":2.2,"fonte":"https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/indexa-broadcast-presidente-outubro-2026-segundo-turno-2/","obs":"data de campo aproximada"},
+ {"instituto":"PoderData","campo_fim":"2026-10-21","divulgacao":"2026-10-22","flavio_validos":51.0,"margem":null,"fonte":"https://poder360.com.br/poder-eleicoes-2026/saiba-como-estao-lula-e-flavio-nas-pesquisas-a-4-dias-do-2o-turno","obs":"data de campo aproximada"},
+ {"instituto":"Quaest","campo_fim":"2026-10-20","divulgacao":"2026-10-21","flavio_validos":50.56,"margem":2.0,"fonte":"https://tvtnews.com.br/quaest-pesquisa-presidente-2-turno-pos-debate-band","obs":"45×44 totais convertido p/ válidos; n=2.154"},
+ {"instituto":"AtlasIntel","campo_fim":"2026-10-18","divulgacao":"2026-10-19","flavio_validos":51.1,"margem":1.0,"fonte":"https://poder360.com.br/poder-eleicoes-2026/saiba-como-estao-lula-e-flavio-nas-pesquisas-a-4-dias-do-2o-turno","obs":""},
+ {"instituto":"Nexus/BTG","campo_fim":"2026-10-18","divulgacao":"2026-10-19","flavio_validos":50.3,"margem":null,"fonte":"https://poder360.com.br/poder-eleicoes-2026/saiba-como-estao-lula-e-flavio-nas-pesquisas-a-4-dias-do-2o-turno","obs":"data não confirmada"},
+ {"instituto":"Datafolha","campo_fim":"2026-10-14","divulgacao":"2026-10-15","flavio_validos":51.0,"margem":2.0,"fonte":"https://poder360.com.br/poder-eleicoes-2026/saiba-como-estao-lula-e-flavio-nas-pesquisas-a-4-dias-do-2o-turno","obs":"nova rodada prevista 22/10 19h"}
+]
