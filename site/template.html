@@ -266,7 +266,7 @@ const PAVG_PNAD=LAST.reduce((a,p)=>a+p.w*pn(p),0)/SW;
 const NPNAD=LAST.filter(p=>p.flavio_pnad!=null).length;
 
 /* ---------- parâmetros ---------- */
-const P={poll:51.22,bias:.4,lv:0,aval:0,late:2.2,cF:50,cL:25,rF:75,rL:8,kF:70,kL:12,oF:30,oL:35,ret:0,w:100};
+const P={poll:+PAVG.toFixed(2),bias:.4,lv:0,aval:0,late:2.2,cF:50,cL:25,rF:75,rL:8,kF:70,kL:12,oF:30,oL:35,ret:0,w:100};
 const DEF={...P};
 const SCEN={Base:{},"Likely Voter":{lv:.54},"Avaliação governo":{aval:.45},"LV + Avaliação":{lv:.54,aval:.45},"Avaliação forte":{aval:.8},Conservador:{bias:.1},Agressivo:{bias:.8,lv:.3},"Reponderação PNAD":{pnad:1}};
 const C=[["poll","Média das pesquisas (Flávio, % válidos)",49,54,.01],["bias","Viés residual do 1º turno (pp)",-1,1.5,.05],["lv","Ajuste likely voter (pp)",0,1.2,.01],["aval","Fator avaliação de governo (pp)",0,1.2,.05],["late","Incerteza da reta final (late_std)",1,4,.1]];
@@ -342,7 +342,7 @@ function ufmap(){let g="";for(const u in POS){const[r,c]=POS[u],p=proj(NT.by[u])
   m.querySelectorAll(".tile").forEach(t=>t.onclick=()=>{const u=t.dataset.u,r=UF[u],tot=r.reduce((a,b)=>a+b);$("ufd").innerHTML=`<b>${u}</b> · 1º turno: Flávio ${f1(r[0]/tot*100)}% · Lula ${f1(r[1]/tot*100)}% · Cury ${f1(r[2]/tot*100)}% · Renan ${f1(r[3]/tot*100)}% · Caiado ${f1(r[4]/tot*100)}% → 2º turno projetado: Flávio <b>${f2(proj(NT.by[u]))}%</b>`})}
 let sortK="p",sortD=-1;
 function uftable(){const rows=Object.keys(UF).map(u=>{const r=UF[u],t=r.reduce((a,b)=>a+b),p=proj(NT.by[u]);return{u,v:t,f1:r[0]/t*100,l1:r[1]/t*100,p,m:NT.by[u].s*(2*p-100)/100}});rows.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);const H=[["u","UF"],["v","Válidos 1T"],["f1","Flávio 1T"],["l1","Lula 1T"],["p","Flávio 2T"],["m","Saldo 2T"]];$("tbl").innerHTML=`<thead><tr>${H.map(([k,n])=>`<th data-k="${k}">${n}${sortK==k?(sortD>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r.u=="ZZ"?"Exterior":r.u}</td><td>${fi(r.v)}</td><td>${f1(r.f1)}</td><td>${f1(r.l1)}</td><td><span class="pill" style="background:${r.p>50?"var(--f)":"var(--l)"}">${f1(r.p)}</span></td><td>${fi(r.m)}</td></tr>`).join("")}</tbody>`;$("tbl").querySelectorAll("th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortD=sortK==k?-sortD:-1;sortK=k;uftable()})}
-function sens(){const polls=[50.5,51,51.22,51.5,51.8],av=[0,.3,.45,.6,.8];let h=`<thead><tr><th>Média ↓ / Avaliação →</th>${av.map(a=>`<th>${f2(a)} pp</th>`).join("")}</tr></thead><tbody>`;for(const p of polls){h+=`<tr><td>${f2(p)}%</td>`;for(const a of av){const s=sim({...P,poll:p,aval:a},20000);h+=`<td>${f1(s.prob)}% <span class="note">(${f2(s.med)})</span></td>`}h+="</tr>"}$("sens").innerHTML=h+"</tbody>"}
+function sens(){const polls=[50.5,51,+PAVG.toFixed(2),51.5,51.8].sort((a,b)=>a-b),av=[0,.3,.45,.6,.8];let h=`<thead><tr><th>Média ↓ / Avaliação →</th>${av.map(a=>`<th>${f2(a)} pp</th>`).join("")}</tr></thead><tbody>`;for(const p of polls){h+=`<tr><td>${f2(p)}%</td>`;for(const a of av){const s=sim({...P,poll:p,aval:a},20000);h+=`<td>${f1(s.prob)}% <span class="note">(${f2(s.med)})</span></td>`}h+="</tr>"}$("sens").innerHTML=h+"</tbody>"}
 
 /* ---------- mapa municipal ---------- */
 let TOPO=null,FEAT=null,UFMESH=null,mSort=-1;

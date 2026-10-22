@@ -1,5 +1,6 @@
 instituto	inicio	fim	divulg	fT	lT	fV	n	margem	fonte	obs
-PoderData	2026-10-19	2026-10-21	2026-10-22			51	3000	1.6	https://www.terra.com.br/noticias/eleicoes/pesquisas/pesquisa-poderdataaya-flavio-bolsonaro-tem-51-em-votos-validos-no-2-turno-e-lula-49,94dbf02cbc9f0bad38de4e0ca6c06b97aew7gt6b.html	datas de campo aproximadas
+Datafolha	2026-10-20	2026-10-22	2026-10-22	47	46		2520	2	https://www.cnnbrasil.com.br/eleicoes/datafolha-flavio-e-lula-empatam-em-50-de-votos-validos-no-2o-turno/	registro BR-09709/2026; válidos divulgados 50×50
+PoderData	2026-10-19	2026-10-21	2026-10-22	49	48		3000	1.6	https://www.terra.com.br/noticias/eleicoes/pesquisas/pesquisa-poderdataaya-flavio-bolsonaro-tem-51-em-votos-validos-no-2-turno-e-lula-49,94dbf02cbc9f0bad38de4e0ca6c06b97aew7gt6b.html	totais 49×48 (soma 101 com arredondamento); válidos divulgados 51×49
 Indexa/Broadcast	2026-10-19	2026-10-21	2026-10-22			50.6	2000	2.2	https://www.cartacapital.com.br/cartaexpressa/pesquisa-indexa-mostra-flavio-bolsonaro-com-506-ante-494-de-lula/	datas de campo aproximadas
 Gerp	2026-10-19	2026-10-21		50	45		2400	2	https://en.wikipedia.org/wiki/Opinion_polling_for_the_2026_Brazilian_presidential_election	
 Futura	2026-10-19	2026-10-20		48.9	46.8		2000	2.2	https://en.wikipedia.org/wiki/Opinion_polling_for_the_2026_Brazilian_presidential_election	
