@@ -1,0 +1,132 @@
+<title>Simulador 2º Turno 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: painel de controle à esquerda, resultados à direita; empilha no celular */
+:root{
+  --bg:#f3f5f8;--panel:#ffffff;--fg:#17202c;--muted:#5d6878;--line:#d9dfe7;
+  --f:#1f4fa8;--l:#c8303a;--accent:#0f7a5c;--soft:#e7ecf3;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Source Sans 3",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--panel:#171e28;--fg:#e6ebf2;--muted:#94a0b2;--line:#2a3442;--f:#6d9cf2;--l:#ef6b72;--accent:#3fc59a;--soft:#1f2834;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141b;--panel:#171e28;--fg:#e6ebf2;--muted:#94a0b2;--line:#2a3442;--f:#6d9cf2;--l:#ef6b72;--accent:#3fc59a;--soft:#1f2834;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body)}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;border-bottom:2px solid var(--fg);padding-bottom:12px;margin-bottom:18px}
+h1{font:700 2.4rem/1 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h2{font:700 1.25rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.sub{color:var(--muted);font-size:.9rem}
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin-bottom:10px;font-size:.9rem}
+.ctl input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.ctl output{font:600 .85rem var(--mono)}
+.grp{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:16px 0 8px;border-top:1px solid var(--line);padding-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:600 .8rem var(--body);border:1px solid var(--line);background:var(--soft);color:var(--fg);border-radius:20px;padding:5px 10px;cursor:pointer}
+.chips button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:620px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi .v{font:700 2.2rem/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi .k{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.bar{display:flex;height:34px;border-radius:4px;overflow:hidden;margin-top:12px;font:600 .9rem var(--mono);color:#fff}
+.bar div{display:flex;align-items:center;padding:0 10px;white-space:nowrap}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media(max-width:1000px){.two{grid-template-columns:1fr}}
+svg text{fill:var(--muted);font:11px var(--mono)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.85rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.note{font-size:.8rem;color:var(--muted)}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font:600 .72rem var(--mono);color:#fff}
+.tile{cursor:pointer}
+</style>
+
+<div class="wrap">
+<header>
+  <div><h1>Simulador do 2º turno · Flávio × Lula</h1>
+  <div class="sub">Base: 1º turno TSE (04/10/2026) · atualizado em <b id="upd">__UPD__</b> · simulação, não é previsão oficial</div></div>
+  <div class="chips" id="scen"></div>
+</header>
+
+<div class="grid">
+<aside class="panel" id="ctls">
+  <h2>Ajustes</h2>
+  <div class="grp">Modelo de pesquisas (Grok)</div>
+  <div id="c-poll"></div>
+  <div class="grp">Transferência do 1º turno (% para Flávio / Lula)</div>
+  <div id="c-tr"></div>
+  <div class="grp">Combinação</div>
+  <div id="c-mix"></div>
+  <p class="note">Probabilidade = Monte Carlo com 60 mil sorteios: média ~ Normal(μ, √(late² + 0,8²)).</p>
+</aside>
+
+<main class="stack">
+  <section class="panel">
+    <div class="kpis">
+      <div class="kpi"><div class="k">Prob. Flávio</div><div class="v" id="kP">–</div></div>
+      <div class="kpi"><div class="k">Mediana Flávio</div><div class="v" id="kM">–</div></div>
+      <div class="kpi"><div class="k">Faixa 25–75%</div><div class="v" id="kI" style="font-size:1.6rem">–</div></div>
+      <div class="kpi"><div class="k">Modelo transferência</div><div class="v" id="kT">–</div></div>
+    </div>
+    <div class="bar" id="bar"></div>
+  </section>
+
+  <div class="two">
+    <section class="panel"><h2>Distribuição simulada</h2><svg id="hist" viewBox="0 0 440 210" width="100%"></svg></section>
+    <section class="panel"><h2>Ritmo de apuração projetado</h2><svg id="curve" viewBox="0 0 440 210" width="100%"></svg>
+    <p class="note">Formato do 1º turno: Sul/Sudeste/Centro-Oeste chegam antes, Nordeste depois. A curva termina na mediana.</p></section>
+  </div>
+
+  <div class="two">
+    <section class="panel"><h2>Mapa por UF (projeção por transferência)</h2><svg id="map" viewBox="0 0 400 330" width="100%"></svg>
+      <p class="note">Cor = margem projetada no 2º turno. Clique numa UF para ver o detalhe.</p><div id="ufd" class="note"></div></section>
+    <section class="panel"><h2>Tabela por UF</h2><div class="tbl" style="max-height:420px;overflow:auto"><table id="tbl"></table></div></section>
+  </div>
+
+  <section class="panel"><h2>Sensibilidade</h2><div class="tbl"><table id="sens"></table></div>
+  <p class="note">Varia a média das pesquisas e o ajuste de avaliação mantendo os demais parâmetros. Fontes: TSE (dados abertos), modelo Grok do usuário, referências metodológicas GES e Arvor.</p></section>
+</main>
+</div>
+</div>
+
+<script>
+const UF=__DATA__; // [Flávio, Lula, Cury, Renan, Caiado, Outros]
+const POS={RR:[0,2],AP:[0,4],AM:[1,1],PA:[1,3],MA:[1,4],CE:[1,5],RN:[1,6],AC:[2,0],RO:[2,1],MT:[2,2],TO:[2,3],PI:[2,4],PE:[2,5],PB:[2,6],GO:[3,3],DF:[3,4],BA:[3,5],AL:[3,6],MS:[4,2],MG:[4,4],ES:[4,5],SE:[4,6],SP:[5,3],RJ:[5,4],PR:[6,3],SC:[7,3],RS:[8,3],ZZ:[8,6]};
+const P={poll:51.22,bias:.4,lv:0,aval:0,late:2.2,cF:50,cL:25,rF:75,rL:8,kF:70,kL:12,oF:30,oL:35,ret:0,w:100};
+const SCEN={Base:{},"Likely Voter":{lv:.54},"Avaliação governo":{aval:.45},"LV + Avaliação":{lv:.54,aval:.45},"Avaliação forte":{aval:.8},Conservador:{bias:.1},Agressivo:{bias:.8,lv:.3}};
+const DEF={...P};
+const C=[["poll","Média das pesquisas (Flávio, % válidos)",49,54,.01],["bias","Viés residual do 1º turno (pp)",-1,1.5,.05],["lv","Ajuste likely voter (pp)",0,1.2,.01],["aval","Fator avaliação de governo (pp)",0,1.2,.05],["late","Incerteza da reta final (late_std)",1,4,.1]];
+const T=[["cF","Augusto Cury → Flávio"],["cL","Augusto Cury → Lula"],["rF","Renan Santos → Flávio"],["rL","Renan Santos → Lula"],["kF","Caiado → Flávio"],["kL","Caiado → Lula"],["oF","Outros → Flávio"],["oL","Outros → Lula"],["ret","Retenção diferencial (pp a Flávio)",-3,3,.1]];
+const M=[["w","Peso das pesquisas vs transferência (%)",0,100,5]];
+function mk(id,list){const el=document.getElementById(id);list.forEach(([k,lab,a=0,b=100,s=1])=>{el.insertAdjacentHTML("beforeend",`<label class="ctl" for="i-${k}"><span>${lab}</span><output id="o-${k}"></output><input type="range" id="i-${k}" min="${a}" max="${b}" step="${s}"></label>`);const i=document.getElementById("i-"+k);i.value=P[k];i.oninput=()=>{P[k]=+i.value;mark(null);run()}})}
+mk("c-poll",C);mk("c-tr",T);mk("c-mix",M);
+const sc=document.getElementById("scen");
+Object.keys(SCEN).forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{Object.assign(P,DEF,SCEN[n]);sync();mark(n);run()};sc.append(b)});
+function mark(n){[...sc.children].forEach(b=>b.classList.toggle("on",b.textContent===n))}
+function sync(){for(const k in P){const i=document.getElementById("i-"+k);if(i)i.value=P[k]}}
+const f1=x=>x.toFixed(1).replace(".",","),f2=x=>x.toFixed(2).replace(".",",");
+function transfer(r){const[F,L,Cu,R,K,O]=r;let f=F+Cu*P.cF/100+R*P.rF/100+K*P.kF/100+O*P.oF/100,l=L+Cu*P.cL/100+R*P.rL/100+K*P.kL/100+O*P.oL/100;const s=f+l;let p=f/s*100+P.ret;return{p,f:s*p/100,l:s*(100-p)/100}}
+function natT(){let f=0,l=0;const by={};for(const u in UF){const t=transfer(UF[u]);by[u]=t;f+=t.f;l+=t.l}return{p:f/(f+l)*100,f,l,by}}
+let seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+function gauss(){let u=rnd()||1e-9,v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function sim(o,n=60000){const tn=natT().p;const mu=(o.w/100)*(o.poll+o.bias+o.lv+o.aval)+(1-o.w/100)*tn;const sd=Math.hypot(o.late,.8);seed=7;const a=new Float64Array(n);let w=0;for(let i=0;i<n;i++){a[i]=mu+sd*gauss();if(a[i]>50)w++}a.sort();const q=p=>a[Math.floor(p*(n-1))];return{prob:w/n*100,med:q(.5),q25:q(.25),q75:q(.75),q05:q(.05),q95:q(.95),a,mu,sd,tn}}
+function col(p){const m=Math.max(-1,Math.min(1,(p-50)/15));const cs=getComputedStyle(document.documentElement);return `color-mix(in srgb, ${cs.getPropertyValue(m>0?"--f":"--l")} ${Math.round(18+Math.abs(m)*82)}%, var(--soft))`}
+function run(){for(const k in P){const o=document.getElementById("o-"+k);if(o)o.textContent=(["poll"].includes(k)?f2(P[k])+"%":["cF","cL","rF","rL","kF","kL","oF","oL"].includes(k)?P[k]+"%":k=="w"?P[k]+"%":f2(P[k]))}
+  const s=sim(P),nt=natT();
+  kP.textContent=f1(s.prob)+"%";kM.textContent=f2(s.med)+"%";kI.textContent=f1(s.q25)+"–"+f1(s.q75);kT.textContent=f2(nt.p)+"%";
+  bar.innerHTML=`<div style="width:${s.med}%;background:var(--f)">Flávio ${f1(s.med)}%</div><div style="flex:1;background:var(--l);justify-content:flex-end">Lula ${f1(100-s.med)}%</div>`;
+  hist(s);curve(s);map(nt.by);table(nt.by);sens()}
+function hist(s){const lo=44,hi=60,bins=64,h=new Array(bins).fill(0);for(const x of s.a){const b=Math.floor((x-lo)/(hi-lo)*bins);if(b>=0&&b<bins)h[b]++}const mx=Math.max(...h),W=400,H=160,x0=30,y0=180;let g="";h.forEach((c,i)=>{const x=lo+(i+.5)*(hi-lo)/bins;g+=`<rect x="${x0+i*W/bins}" y="${y0-c/mx*H}" width="${W/bins-1}" height="${c/mx*H}" fill="${x>50?"var(--f)":"var(--l)"}" opacity=".85"/>`});const X=v=>x0+(v-lo)/(hi-lo)*W;for(let v=44;v<=60;v+=2)g+=`<text x="${X(v)}" y="198" text-anchor="middle">${v}</text>`;g+=`<line x1="${X(50)}" x2="${X(50)}" y1="12" y2="${y0}" stroke="var(--fg)" stroke-dasharray="3 3"/><line x1="${X(s.med)}" x2="${X(s.med)}" y1="12" y2="${y0}" stroke="var(--accent)" stroke-width="2"/><text x="${X(s.med)+4}" y="22" style="fill:var(--accent)">mediana ${f2(s.med)}</text>`;hist_el().innerHTML=g}
+const hist_el=()=>document.getElementById("hist");
+function curve(s){const off=x=>x<=22?5.6+.7*x/22:6.3*(1-(x-22)/78),hw=x=>2.3-(2.3-(s.q75-s.q25)/1.35*1.1)*x/100;const lo=46,hi=64,W=390,H=170,x0=40,y0=185,X=x=>x0+x/100*W,Y=v=>y0-(v-lo)/(hi-lo)*H;let up="",dn="",ln="";for(let x=0;x<=100;x+=2){const m=s.med+off(x);up+=`${X(x)},${Y(m+hw(x))} `;dn=`${X(x)},${Y(m-hw(x))} `+dn;ln+=`${X(x)},${Y(m)} `}let g=`<polygon points="${up+dn}" fill="var(--f)" opacity=".15"/><polyline points="${ln}" fill="none" stroke="var(--f)" stroke-width="2.5"/><line x1="${x0}" x2="${x0+W}" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--l)" stroke-dasharray="4 3"/>`;for(let v=46;v<=64;v+=4)g+=`<text x="${x0-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;[0,25,50,75,100].forEach(x=>g+=`<text x="${X(x)}" y="203" text-anchor="middle">${x}%</text>`);g+=`<text x="${X(0)+4}" y="${Y(s.med+5.6)-10}" style="fill:var(--f)">início ${f1(s.med+5.6)}</text><text x="${X(100)-4}" y="${Y(s.med)-12}" text-anchor="end" style="fill:var(--f)">final ${f1(s.med)}</text>`;document.getElementById("curve").innerHTML=g}
+function map(by){let g="";for(const u in POS){const[r,c]=POS[u],p=by[u].p,x=10+c*54,y=10+r*35;g+=`<g class="tile" data-u="${u}"><rect x="${x}" y="${y}" width="50" height="31" rx="3" fill="${col(p)}"/><text x="${x+25}" y="${y+14}" text-anchor="middle" style="fill:var(--fg);font-weight:600">${u=="ZZ"?"EXT":u}</text><text x="${x+25}" y="${y+26}" text-anchor="middle" style="fill:var(--fg)">${f1(p)}</text></g>`}const m=document.getElementById("map");m.innerHTML=g;m.querySelectorAll(".tile").forEach(t=>t.onclick=()=>{const u=t.dataset.u,r=UF[u],tot=r.reduce((a,b)=>a+b);ufd.innerHTML=`<b>${u}</b> · 1º turno: Flávio ${f1(r[0]/tot*100)}% · Lula ${f1(r[1]/tot*100)}% · Cury ${f1(r[2]/tot*100)}% · Renan ${f1(r[3]/tot*100)}% · Caiado ${f1(r[4]/tot*100)}% → 2º turno projetado Flávio <b>${f2(by[u].p)}%</b>`})}
+let sortK="p",sortD=-1;
+function table(by){const rows=Object.keys(UF).map(u=>{const r=UF[u],t=r.reduce((a,b)=>a+b);return{u,v:t,f1:r[0]/t*100,l1:r[1]/t*100,p:by[u].p,m:(by[u].f-by[u].l)}});rows.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);const H=[["u","UF"],["v","Válidos 1T"],["f1","Flávio 1T"],["l1","Lula 1T"],["p","Flávio 2T"],["m","Saldo (votos)"]];tbl.innerHTML=`<thead><tr>${H.map(([k,n])=>`<th data-k="${k}">${n}${sortK==k?(sortD>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r.u=="ZZ"?"Exterior":r.u}</td><td>${r.v.toLocaleString("pt-BR")}</td><td>${f1(r.f1)}</td><td>${f1(r.l1)}</td><td><span class="pill" style="background:${r.p>50?"var(--f)":"var(--l)"}">${f1(r.p)}</span></td><td>${Math.round(r.m).toLocaleString("pt-BR")}</td></tr>`).join("")}</tbody>`;tbl.querySelectorAll("th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortD=sortK==k?-sortD:-1;sortK=k;table(by)})}
+function sens(){const polls=[50.5,51,51.22,51.5,51.8],av=[0,.3,.45,.6,.8];let h=`<thead><tr><th>Média pesquisas ↓ / Avaliação →</th>${av.map(a=>`<th>${f2(a)} pp</th>`).join("")}</tr></thead><tbody>`;for(const p of polls){h+=`<tr><td>${f2(p)}%</td>`;for(const a of av){const s=sim({...P,poll:p,aval:a},20000);h+=`<td>${f1(s.prob)}% <span class="note">(${f2(s.med)})</span></td>`}h+="</tr>"}document.getElementById("sens").innerHTML=h+"</tbody>"}
+mark("Base");run();
+</script>
