@@ -90,7 +90,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 <aside class="panel">
   <h2>Ajustes</h2>
   <div class="grp">Modelo de pesquisas</div>
-  <button class="btn" id="usePolls" style="margin-bottom:10px">Usar média ponderada das pesquisas (<span id="pavg"></span>)</button>
+  <div class="chips" style="margin-bottom:10px"><button class="btn" id="usePolls">Média publicada (<span id="pavg"></span>)</button><button class="btn" id="usePnad">Média PNAD (<span id="pavgp"></span>)</button></div>
   <div id="c-poll"></div>
   <div class="grp">Transferência do 1º turno (% para Flávio / Lula)</div>
   <div id="c-tr"></div>
@@ -130,7 +130,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 <div class="panel">
   <div class="toolbar">
     <label for="mMode">Camada</label>
-    <select id="mMode"><option value="p2">2º turno projetado (Flávio %)</option><option value="f1">1º turno · Flávio %</option><option value="m1">1º turno · margem Flávio − Lula</option><option value="o1">1º turno · Cury + Renan + Caiado %</option></select>
+    <select id="mMode"><option value="p2">2º turno projetado (Flávio %)</option><option value="f1">1º turno · Flávio %</option><option value="m1">1º turno · margem Flávio − Lula</option><option value="o1">1º turno · Cury + Renan + Caiado %</option><option value="ab">Abstenção no 1º turno %</option><option value="idh">IDHM (2010)</option><option value="rd">Renda per capita (Censo 2010)</option><option value="pib">PIB per capita (2023)</option></select>
     <label for="mUF">UF</label><select id="mUF"><option value="">Brasil</option></select>
     <label for="mReg">Região</label><select id="mReg"><option value="">Todas</option><option>N</option><option>NE</option><option>CO</option><option>SE</option><option>S</option></select>
     <div class="legend"><span id="lgLo"></span><i></i><span id="lgHi"></span></div>
@@ -150,6 +150,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 </div>
 <div class="two" style="margin-top:18px">
   <section class="panel"><h2>Voto por porte do município</h2><div class="tbl"><table id="sizeT"></table></div><p class="note">Porte medido pelos votos válidos para presidente no município.</p></section>
+  <section class="panel"><h2>Voto por indicador socioeconômico</h2><div class="toolbar"><label for="qInd">Indicador</label><select id="qInd"><option value="2">IDHM (2010)</option><option value="3">Renda per capita (2010)</option><option value="4">PIB per capita (2023)</option><option value="1">Abstenção 1º turno</option></select></div><div class="tbl"><table id="qT"></table></div><p class="note">Municípios divididos em 5 grupos com o mesmo número de eleitores aptos, do menor para o maior valor do indicador.</p></section>
   <section class="panel"><h2>Quem ganhou onde</h2><div class="tbl"><table id="winT"></table></div></section>
 </div>
 <div class="two" style="margin-top:18px">
@@ -164,7 +165,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 <div class="panel">
   <h2>Pesquisas do 2º turno (votos válidos)</h2>
   <div class="tbl"><table id="pT"></table></div>
-  <p class="note">Média ponderada por recência (meia-vida de 3 dias, contada a partir do fim do campo), uma rodada por instituto. Pesquisas em votos totais são convertidas excluindo brancos, nulos e indecisos.</p>
+  <p class="note">Pontos cheios: última rodada de cada instituto (entra na média). Pontos claros: rodadas anteriores. Círculos verdes: valor reponderado PNAD. Coluna PNAD: voto reponderado pela distribuição de renda da PNAD Contínua, conforme cálculo publicado pelo <a href="https://brasil.arvor.co/reponderacao_pnad.html" target="_blank" rel="noopener" style="color:var(--fg)">Arvor</a> (<span id="npn"></span>). Sem cruzamento de renda, a pesquisa entra com o número publicado. Média ponderada por recência (meia-vida de 3 dias, contada a partir do fim do campo), só a última rodada de cada instituto. Pesquisas em votos totais são convertidas excluindo brancos, nulos e indecisos.</p>
   <svg id="pChart" viewBox="0 0 640 220" width="100%"></svg>
 </div>
 </section>
@@ -184,6 +185,8 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
     <li><b>Avaliação de governo</b>: ajuste leve pelo histórico Datafolha. Nenhum presidente se reelegeu com ótimo/bom abaixo de ~38%; Lula está em 35%. Como só há 4 casos (1998, 2006, 2014, 2022), entra como cenário, não no caso base. Valor de referência +0,45 pp.</li>
   </ul>
   <p>A incerteza é <code>σ = √(late_std² + 0,8²)</code>, onde <code>late_std</code> é o movimento da reta final (base 2,2) e 0,8 é o erro de amostragem agregado. Sorteamos 60 mil vezes de uma Normal(μ, σ) e contamos quantas vezes Flávio passa de 50%.</p>
+  <h3>Cenário Reponderação PNAD</h3>
+  <p>Pesquisas tendem a ter proporções de renda diferentes das do país. A reponderação troca o peso de cada faixa de renda da amostra pelo peso que essa faixa tem na PNAD Contínua (IBGE), mantendo o voto dentro de cada faixa. Usamos os valores reponderados publicados pelo Arvor para cada instituto com cruzamento de renda compatível; os demais entram com o número publicado. O cenário troca a média publicada pela média PNAD e mantém os outros ajustes.</p>
   <h3>2. Modelo de transferência</h3>
   <p>Usa o resultado real do 1º turno em cada UF e município. Os votos de Flávio e Lula ficam com eles; os votos de cada eliminado são repartidos pelas porcentagens dos sliders (o resto vira abstenção, branco ou nulo). A <b>retenção diferencial</b> desloca o resultado para captar diferença de comparecimento entre os eleitorados.</p>
   <h3>3. Mapa e herança municipal</h3>
@@ -193,7 +196,7 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
   <h3>Limitações</h3>
   <ul>
     <li>Porcentagens de transferência e retenção são hipóteses, não medidas.</li>
-    <li>O modelo não usa comparecimento por UF nem demografia (Censo/PNAD).</li>
+    <li>O modelo de transferência não usa comparecimento por município nem demografia. A abstenção, o IDHM e a renda aparecem no mapa como camadas de análise.</li><li>A PNAD não tem dado por município. Para renda municipal usamos a renda per capita do Censo 2010 (Atlas Brasil) e o PIB per capita de 2023; o IDHM também é de 2010, o último disponível.</li>
     <li>A probabilidade não é validada contra resultados passados; leia como sensibilidade.</li>
   </ul>
   <h3>Referências</h3>
@@ -209,7 +212,10 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
   <dl class="gl">
     <dt>Votos válidos</dt><dd>Votos dados a candidatos. Exclui brancos e nulos. É o que define o vencedor (precisa de mais de 50%).</dd>
     <dt>Votos totais</dt><dd>Inclui brancos, nulos e indecisos. As pesquisas costumam divulgar os dois.</dd>
+    <dt>IDHM</dt><dd>Índice de Desenvolvimento Humano Municipal (PNUD/Atlas Brasil), de 0 a 1, combinando renda, educação e longevidade. Último dado: Censo 2010.</dd>
     <dt>Abstenção</dt><dd>Eleitores aptos que não foram votar. No 1º turno de 2026 o comparecimento foi de cerca de 79%.</dd>
+    <dt>PNAD Contínua</dt><dd>Pesquisa domiciliar do IBGE que mede renda, trabalho e perfil da população. Serve de referência para corrigir o peso das faixas de renda nas amostras.</dd>
+    <dt>Reponderação</dt><dd>Recalcular o resultado de uma pesquisa mudando o peso de grupos da amostra para bater com uma referência externa.</dd>
     <dt>Margem de erro</dt><dd>Faixa em torno do número da pesquisa onde o valor real deve estar, com 95% de confiança. Vale para cada candidato, não para a diferença entre eles.</dd>
     <dt>Empate técnico</dt><dd>Quando a diferença entre os candidatos cabe dentro da margem de erro.</dd>
     <dt>Média ponderada</dt><dd>Média das pesquisas em que as mais recentes pesam mais. Aqui o peso cai pela metade a cada 3 dias.</dd>
@@ -239,7 +245,8 @@ code{font:.85em var(--mono);background:var(--soft);padding:1px 4px;border-radius
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
 const UF=__DATA__; // [Flávio, Lula, Cury, Renan, Caiado, Outros]
-const MUN=__MUN__; // ibge: [nome, uf, regiao, F, L, Cury, Renan, Caiado, total]
+const MUN=__MUN__;
+const IND=__IND__; // ibge: [aptos, abstenção %, IDHM 2010, renda per capita 2010 R$, PIB per capita 2023 R$] // ibge: [nome, uf, regiao, F, L, Cury, Renan, Caiado, total]
 const POLLS=__POLLS__;
 const UFN={AC:"N",AM:"N",AP:"N",PA:"N",RO:"N",RR:"N",TO:"N",AL:"NE",BA:"NE",CE:"NE",MA:"NE",PB:"NE",PE:"NE",PI:"NE",RN:"NE",SE:"NE",DF:"CO",GO:"CO",MS:"CO",MT:"CO",ES:"SE",MG:"SE",RJ:"SE",SP:"SE",PR:"S",RS:"S",SC:"S"};
 const POS={RR:[0,2],AP:[0,4],AM:[1,1],PA:[1,3],MA:[1,4],CE:[1,5],RN:[1,6],AC:[2,0],RO:[2,1],MT:[2,2],TO:[2,3],PI:[2,4],PE:[2,5],PB:[2,6],GO:[3,3],DF:[3,4],BA:[3,5],AL:[3,6],MS:[4,2],MG:[4,4],ES:[4,5],SE:[4,6],SP:[5,3],RJ:[5,4],PR:[6,3],SC:[7,3],RS:[8,3],ZZ:[8,6]};
@@ -252,14 +259,17 @@ function showTab(t){if(!TABS.includes(t))t="simulador";TABS.forEach(x=>$("t-"+x)
 window.addEventListener("hashchange",()=>showTab(location.hash.slice(1)));
 
 /* ---------- pesquisas ---------- */
-const DAY=864e5,NOW=Math.max(...POLLS.map(p=>+new Date(p.campo_fim)));
-POLLS.forEach(p=>{p.age=(NOW-new Date(p.campo_fim))/DAY;p.w=Math.pow(.5,p.age/3)});
-const PAVG=POLLS.reduce((a,p)=>a+p.w*p.flavio_validos,0)/POLLS.reduce((a,p)=>a+p.w,0);
+const DAY=864e5,NOW=Math.max(...POLLS.map(p=>+new Date(p.campo_fim))),LAST=POLLS.filter(p=>p.ultima);
+POLLS.forEach(p=>{p.age=(NOW-new Date(p.campo_fim))/DAY;p.w=p.ultima?Math.pow(.5,p.age/3):0});
+const SW=LAST.reduce((a,p)=>a+p.w,0),PAVG=LAST.reduce((a,p)=>a+p.w*p.flavio_validos,0)/SW;
+const pn=p=>p.flavio_pnad??p.flavio_validos;
+const PAVG_PNAD=LAST.reduce((a,p)=>a+p.w*pn(p),0)/SW;
+const NPNAD=LAST.filter(p=>p.flavio_pnad!=null).length;
 
 /* ---------- parâmetros ---------- */
 const P={poll:51.22,bias:.4,lv:0,aval:0,late:2.2,cF:50,cL:25,rF:75,rL:8,kF:70,kL:12,oF:30,oL:35,ret:0,w:100};
 const DEF={...P};
-const SCEN={Base:{},"Likely Voter":{lv:.54},"Avaliação governo":{aval:.45},"LV + Avaliação":{lv:.54,aval:.45},"Avaliação forte":{aval:.8},Conservador:{bias:.1},Agressivo:{bias:.8,lv:.3}};
+const SCEN={Base:{},"Likely Voter":{lv:.54},"Avaliação governo":{aval:.45},"LV + Avaliação":{lv:.54,aval:.45},"Avaliação forte":{aval:.8},Conservador:{bias:.1},Agressivo:{bias:.8,lv:.3},"Reponderação PNAD":{pnad:1}};
 const C=[["poll","Média das pesquisas (Flávio, % válidos)",49,54,.01],["bias","Viés residual do 1º turno (pp)",-1,1.5,.05],["lv","Ajuste likely voter (pp)",0,1.2,.01],["aval","Fator avaliação de governo (pp)",0,1.2,.05],["late","Incerteza da reta final (late_std)",1,4,.1]];
 const T=[["cF","Augusto Cury → Flávio"],["cL","Augusto Cury → Lula"],["rF","Renan Santos → Flávio"],["rL","Renan Santos → Lula"],["kF","Caiado → Flávio"],["kL","Caiado → Lula"],["oF","Outros → Flávio"],["oL","Outros → Lula"],["ret","Retenção diferencial (pp a Flávio)",-3,3,.1]];
 const M=[["w","Peso das pesquisas vs transferência (%)",0,100,5]];
@@ -268,8 +278,9 @@ function mk(id,list){const el=$(id);list.forEach(([k,lab,a=0,b=100,s=1])=>{el.in
 mk("c-poll",C);mk("c-tr",T);mk("c-mix",M);
 $("pavg").textContent=f2(PAVG)+"%";
 $("usePolls").onclick=()=>{P.poll=+PAVG.toFixed(2);sync();mark(null);run()};
+$("pavgp").textContent=f2(PAVG_PNAD)+"%";$("usePnad").onclick=()=>{P.poll=+PAVG_PNAD.toFixed(2);sync();mark(null);run()};
 const sc=$("scen");
-Object.keys(SCEN).forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{const keep=P.poll;Object.assign(P,DEF,{poll:keep},SCEN[n]);sync();mark(n);run()};sc.append(b)});
+Object.keys(SCEN).forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{const keep=P.poll,sc=SCEN[n];Object.assign(P,DEF,{poll:sc.pnad?+PAVG_PNAD.toFixed(2):(keep===+PAVG_PNAD.toFixed(2)?+PAVG.toFixed(2):keep)},sc);delete P.pnad;sync();mark(n);run()};sc.append(b)});
 function mark(n){[...sc.children].forEach(b=>b.classList.toggle("on",b.textContent===n))}
 function sync(){for(const k in P){const i=$("i-"+k);if(i)i.value=P[k]}}
 
@@ -302,8 +313,9 @@ const UFS=[...new Set(Object.values(MUN).map(m=>m[1]))].sort();
 UFS.forEach(u=>$("mUF").insertAdjacentHTML("beforeend",`<option>${u}</option>`));
 ["mMode","mUF","mReg"].forEach(i=>$(i).onchange=()=>{if(i!=="mMode")$(i==="mUF"?"mReg":"mUF").value="";drawMun(true)});
 $("mQ").oninput=()=>munTable();
-function munVal(m,mode){const[,,,F,L,Cu,R,K,t]=m;if(mode==="f1")return F/t*100;if(mode==="m1")return(F-L)/t*100;if(mode==="o1")return(Cu+R+K)/t*100;return Math.max(1,Math.min(99,transfer(F,L,Cu,R,K,t-F-L-Cu-R-K).p+SHIFT))}
-function colFor(v,mode){if(mode==="m1")return col(50+v/2,20);if(mode==="o1"){return `color-mix(in srgb, var(--accent) ${Math.round(Math.min(1,v/25)*90+5)}%, var(--soft))`}return col(v,mode==="f1"?20:15)}
+const SEQ={ab:[10,35,false],idh:[.45,.85,false],rd:[150,1500,true],pib:[5e3,1e5,true]};
+function munVal(m,mode,code){if(SEQ[mode]){const v=IND[code];return v?v[{ab:1,idh:2,rd:3,pib:4}[mode]]:null}const[,,,F,L,Cu,R,K,t]=m;if(mode==="f1")return F/t*100;if(mode==="m1")return(F-L)/t*100;if(mode==="o1")return(Cu+R+K)/t*100;return Math.max(1,Math.min(99,transfer(F,L,Cu,R,K,t-F-L-Cu-R-K).p+SHIFT))}
+function colFor(v,mode){if(v==null)return "var(--line)";if(SEQ[mode]){const[a,b,lg]=SEQ[mode],x=lg?(Math.log(v)-Math.log(a))/(Math.log(b)-Math.log(a)):(v-a)/(b-a),t=Math.max(0,Math.min(1,x));return `color-mix(in srgb, var(--accent) ${Math.round(t*92+4)}%, var(--soft))`}if(mode==="m1")return col(50+v/2,20);if(mode==="o1"){return `color-mix(in srgb, var(--accent) ${Math.round(Math.min(1,v/25)*90+5)}%, var(--soft))`}return col(v,mode==="f1"?20:15)}
 async function loadTopo(){if(TOPO)return;TOPO=await (await fetch("br_municipios.topo.json")).json();FEAT=topojson.feature(TOPO,TOPO.objects.BRMU).features}
 let lastKey="";
 async function drawMun(force){try{await loadTopo()}catch(e){$("mInfo").textContent="Não foi possível carregar a malha municipal. Abra a versão do GitHub Pages para ver o mapa.";return}
@@ -315,16 +327,16 @@ async function drawMun(force){try{await loadTopo()}catch(e){$("mInfo").textConte
     const b=path.bounds({type:"FeatureCollection",features:sel});svg.attr("viewBox",`${b[0][0]-5} ${b[0][1]-5} ${b[1][0]-b[0][0]+10} ${b[1][1]-b[0][1]+10}`);
     svg.selectAll("*").remove();
     svg.selectAll("path.m").data(sel).join("path").attr("class","m").attr("d",path)
-      .on("mousemove",(e,d)=>{const m=MUN[d.properties.codarea],tp=$("tip");tp.hidden=false;tp.style.left=e.clientX+12+"px";tp.style.top=e.clientY+12+"px";tp.innerHTML=`<b>${m[0]} · ${m[1]}</b><br>Flávio 1T ${f1(m[3]/m[8]*100)}% · Lula ${f1(m[4]/m[8]*100)}%<br>2T projetado Flávio ${f1(munVal(m,"p2"))}%<br>${fi(m[8])} válidos`})
+      .on("mousemove",(e,d)=>{const m=MUN[d.properties.codarea],tp=$("tip");tp.hidden=false;tp.style.left=e.clientX+12+"px";tp.style.top=e.clientY+12+"px";tp.innerHTML=`<b>${m[0]} · ${m[1]}</b><br>Flávio 1T ${f1(m[3]/m[8]*100)}% · Lula ${f1(m[4]/m[8]*100)}%<br>2T projetado Flávio ${f1(munVal(m,"p2"))}%<br>${fi(m[8])} válidos${(i=>i?`<br>Abstenção ${f1(i[1])}% · IDHM ${i[2]!=null?i[2].toFixed(3).replace('.',','):'–'}<br>Renda pc 2010 R$ ${i[3]!=null?fi(i[3]):'–'} · PIB pc R$ ${i[4]!=null?fi(i[4]):'–'}`:'')(IND[d.properties.codarea])}`})
       .on("mouseleave",()=>$("tip").hidden=true);
     if(!uf){const mesh=topojson.mesh(TOPO,TOPO.objects.BRMU,(a,b)=>MUN[a.properties.codarea]?.[1]!==MUN[b.properties.codarea]?.[1]);svg.append("path").attr("class","uf").attr("d",path(mesh))}}
-  svg.selectAll("path.m").attr("fill",d=>colFor(munVal(MUN[d.properties.codarea],mode),mode));
-  const L={p2:["Lula","Flávio"],f1:["30%","70%"],m1:["Lula +40","Flávio +40"],o1:["0%","25%+"]}[mode];$("lgLo").textContent=L[0];$("lgHi").textContent=L[1];
+  svg.selectAll("path.m").attr("fill",d=>colFor(munVal(MUN[d.properties.codarea],mode,d.properties.codarea),mode));
+  const L={p2:["Lula","Flávio"],f1:["30%","70%"],m1:["Lula +40","Flávio +40"],o1:["0%","25%+"],ab:["10%","35%+"],idh:["0,45","0,85"],rd:["R$ 150","R$ 1.500+"],pib:["R$ 5 mil","R$ 100 mil+"]}[mode];document.querySelector(".legend i").style.background=SEQ[mode]?"linear-gradient(90deg,var(--soft),var(--accent))":"";$("lgLo").textContent=L[0];$("lgHi").textContent=L[1];
   let F=0,Lv=0,T=0,wF=0;sel.forEach(f=>{const m=MUN[f.properties.codarea];F+=m[3];Lv+=m[4];T+=m[8];if(munVal(m,"p2")>50)wF++});
   $("mInfo").textContent=`${sel.length} municípios · 1º turno: Flávio ${f1(F/T*100)}% × Lula ${f1(Lv/T*100)}% · projeção: Flávio vence em ${wF} e Lula em ${sel.length-wF}`;
   munTable()}
-function munTable(){const uf=$("mUF").value,reg=$("mReg").value,q=$("mQ").value.trim().toUpperCase();let rows=Object.values(MUN).filter(m=>(!uf||m[1]===uf)&&(!reg||m[2]===reg)&&(!q||m[0].toUpperCase().includes(q)));rows.sort((a,b)=>b[8]-a[8]);rows=rows.slice(0,200);
-  $("mtbl").innerHTML=`<thead><tr><th>Município</th><th>UF</th><th>Válidos</th><th>Flávio 1T</th><th>Lula 1T</th><th>Outros 3</th><th>Flávio 2T</th></tr></thead><tbody>${rows.map(m=>{const p=munVal(m,"p2");return`<tr><td>${m[0]}</td><td>${m[1]}</td><td>${fi(m[8])}</td><td>${f1(m[3]/m[8]*100)}</td><td>${f1(m[4]/m[8]*100)}</td><td>${f1((m[5]+m[6]+m[7])/m[8]*100)}</td><td><span class="pill" style="background:${p>50?"var(--f)":"var(--l)"}">${f1(p)}</span></td></tr>`}).join("")}</tbody>`}
+function munTable(){const uf=$("mUF").value,reg=$("mReg").value,q=$("mQ").value.trim().toUpperCase();let rows=Object.entries(MUN).filter(([,m])=>(!uf||m[1]===uf)&&(!reg||m[2]===reg)&&(!q||m[0].toUpperCase().includes(q)));rows.sort((a,b)=>b[1][8]-a[1][8]);rows=rows.slice(0,200);
+  $("mtbl").innerHTML=`<thead><tr><th>Município</th><th>UF</th><th>Válidos</th><th>Flávio 1T</th><th>Lula 1T</th><th>Outros 3</th><th>Abst.</th><th>IDHM</th><th>Flávio 2T</th></tr></thead><tbody>${rows.map(([c,m])=>{const p=munVal(m,"p2"),i=IND[c]||[];return`<tr><td>${m[0]}</td><td>${m[1]}</td><td>${fi(m[8])}</td><td>${f1(m[3]/m[8]*100)}</td><td>${f1(m[4]/m[8]*100)}</td><td>${f1((m[5]+m[6]+m[7])/m[8]*100)}</td><td>${i[1]!=null?f1(i[1]):"–"}</td><td>${i[2]!=null?i[2].toFixed(3).replace(".",","):"–"}</td><td><span class="pill" style="background:${p>50?"var(--f)":"var(--l)"}">${f1(p)}</span></td></tr>`}).join("")}</tbody>`}
 
 /* ---------- 1º turno ---------- */
 function firstRound(){const tot=[0,0,0,0,0,0];for(const u in UF)UF[u].forEach((v,i)=>tot[i]+=v);const all=tot.reduce((a,b)=>a+b),names=["Flávio Bolsonaro (PL)","Lula (PT)","Augusto Cury (Avante)","Renan Santos (Missão)","Ronaldo Caiado (PSD)","Outros"],cols=["var(--f)","var(--l)","var(--accent)","var(--accent)","var(--accent)","var(--muted)"],mx=Math.max(...tot);
@@ -341,12 +353,16 @@ function firstRound(){const tot=[0,0,0,0,0,0];for(const u in UF)UF[u].forEach((v
   $("topF").innerHTML=top(arr.slice().sort((a,b)=>b.s-a.s).slice(0,12));$("topL").innerHTML=top(arr.slice().sort((a,b)=>a.s-b.s).slice(0,12));
   $("elimT").innerHTML=`<thead><tr><th>Região</th><th>Cury</th><th>Renan</th><th>Caiado</th><th>Total eliminados</th><th>% dos válidos</th></tr></thead><tbody>${["N","NE","CO","SE","S"].map(r=>{const v=reg[r],t=v.reduce((a,b)=>a+b);return`<tr><td>${r}</td><td>${fi(v[2])}</td><td>${fi(v[3])}</td><td>${fi(v[4])}</td><td>${fi(v[2]+v[3]+v[4])}</td><td>${f1((v[2]+v[3]+v[4])/t*100)}</td></tr>`}).join("")}</tbody>`}
 
+function quint(){const k=+$("qInd").value,arr=Object.entries(MUN).filter(([c])=>IND[c]&&IND[c][k]!=null).map(([c,m])=>({v:IND[c][k],a:IND[c][0],m}));arr.sort((x,y)=>x.v-y.v);const tot=arr.reduce((s,x)=>s+x.a,0);const G=[0,1,2,3,4].map(()=>({n:0,a:0,F:0,L:0,T:0,lo:Infinity,hi:-Infinity}));let acc=0;for(const x of arr){const g=G[Math.min(4,Math.floor(acc/tot*5))];acc+=x.a;g.n++;g.a+=x.a;g.F+=x.m[3];g.L+=x.m[4];g.T+=x.m[8];g.lo=Math.min(g.lo,x.v);g.hi=Math.max(g.hi,x.v)}
+  const fm=v=>k===2?v.toFixed(3).replace(".",","):k===1?f1(v)+"%":"R$ "+fi(v);
+  $("qT").innerHTML=`<thead><tr><th>Grupo</th><th>Faixa</th><th>Municípios</th><th>Flávio</th><th>Lula</th><th>Saldo Flávio</th></tr></thead><tbody>${G.map((g,i)=>`<tr><td>${i+1}º</td><td>${fm(g.lo)} a ${fm(g.hi)}</td><td>${fi(g.n)}</td><td>${f1(g.F/g.T*100)}</td><td>${f1(g.L/g.T*100)}</td><td>${fi(g.F-g.L)}</td></tr>`).join("")}</tbody>`}
+
 /* ---------- aba pesquisas ---------- */
-function pollsTab(){const rows=POLLS.slice().sort((a,b)=>new Date(b.campo_fim)-new Date(a.campo_fim)),sw=POLLS.reduce((a,p)=>a+p.w,0);const dt=s=>s.slice(8,10)+"/"+s.slice(5,7);
-  $("pT").innerHTML=`<thead><tr><th>Instituto</th><th>Fim do campo</th><th>Divulgação</th><th>Flávio</th><th>Lula</th><th>Margem</th><th>Peso</th><th>Obs.</th></tr></thead><tbody>${rows.map(p=>`<tr><td><a href="${p.fonte}" target="_blank" rel="noopener" style="color:var(--fg)">${p.instituto}</a></td><td>${dt(p.campo_fim)}</td><td>${dt(p.divulgacao)}</td><td>${f1(p.flavio_validos)}</td><td>${f1(100-p.flavio_validos)}</td><td>${p.margem!=null?"±"+f1(p.margem):"–"}</td><td>${f1(p.w/sw*100)}%</td><td class="note" style="text-align:left">${p.obs||""}</td></tr>`).join("")}<tr><td><b>Média ponderada</b></td><td></td><td></td><td><b>${f2(PAVG)}</b></td><td><b>${f2(100-PAVG)}</b></td><td></td><td></td><td></td></tr></tbody>`;
-  const d0=Math.min(...POLLS.map(p=>+new Date(p.campo_fim)))-DAY,d1=NOW+DAY,X=d=>50+(d-d0)/(d1-d0)*570,Y=v=>190-(v-48)/(54-48)*170;let g="";for(let v=48;v<=54;v+=1)g+=`<line x1="50" x2="620" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="44" y="${Y(v)+4}" text-anchor="end">${v}</text>`;g+=`<line x1="50" x2="620" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--l)" stroke-dasharray="4 3"/><line x1="50" x2="620" y1="${Y(PAVG)}" y2="${Y(PAVG)}" stroke="var(--accent)" stroke-width="2"/><text x="618" y="${Y(PAVG)-6}" text-anchor="end" style="fill:var(--accent)">média ${f2(PAVG)}</text>`;
-  POLLS.forEach(p=>{const x=X(+new Date(p.campo_fim)),y=Y(p.flavio_validos);g+=`<circle cx="${x}" cy="${y}" r="${4+p.w/sw*14}" fill="var(--f)" opacity=".7"/><text x="${x+8}" y="${y+4}">${p.instituto.split("/")[0]}</text>`});
+function pollsTab(){const rows=POLLS.slice().sort((a,b)=>(b.ultima-a.ultima)||(new Date(b.campo_fim)-new Date(a.campo_fim))),sw=SW;const dt=s=>s?s.slice(8,10)+"/"+s.slice(5,7):"–";
+  $("npn")&&($("npn").textContent=NPNAD+" de "+LAST.length+" institutos com ajuste");$("pT").innerHTML=`<thead><tr><th>Instituto</th><th>Fim do campo</th><th>Divulgação</th><th>Flávio</th><th>Lula</th><th>Flávio PNAD</th><th>Δ PNAD</th><th>Margem</th><th>Peso</th><th>Obs.</th></tr></thead><tbody>${rows.map(p=>`<tr style="${p.ultima?"":"opacity:.55"}"><td><a href="${p.fonte}" target="_blank" rel="noopener" style="color:var(--fg)">${p.instituto}</a></td><td>${dt(p.campo_fim)}</td><td>${dt(p.divulgacao)}</td><td>${f1(p.flavio_validos)}</td><td>${f1(100-p.flavio_validos)}</td><td>${p.flavio_pnad!=null?f2(p.flavio_pnad):"–"}</td><td>${p.flavio_pnad!=null?(p.flavio_pnad>=p.flavio_validos?"+":"")+f2(p.flavio_pnad-p.flavio_validos):"–"}</td><td>${p.margem!=null?"±"+f1(p.margem):"–"}</td><td>${p.ultima?f1(p.w/sw*100)+"%":"rodada anterior"}</td><td class="note" style="text-align:left">${p.obs||""}</td></tr>`).join("")}<tr><td><b>Média ponderada</b></td><td></td><td></td><td><b>${f2(PAVG)}</b></td><td><b>${f2(100-PAVG)}</b></td><td><b>${f2(PAVG_PNAD)}</b></td><td><b>+${f2(PAVG_PNAD-PAVG)}</b></td><td></td><td></td><td></td></tr></tbody>`;
+  const d0=Math.min(...POLLS.map(p=>+new Date(p.campo_fim)))-DAY,d1=NOW+DAY,X=d=>50+(d-d0)/(d1-d0)*570,Y=v=>190-(v-48)/(55-48)*170;let g="";for(let v=48;v<=55;v+=1)g+=`<line x1="50" x2="620" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="44" y="${Y(v)+4}" text-anchor="end">${v}</text>`;g+=`<line x1="50" x2="620" y1="${Y(50)}" y2="${Y(50)}" stroke="var(--l)" stroke-dasharray="4 3"/><line x1="50" x2="620" y1="${Y(PAVG)}" y2="${Y(PAVG)}" stroke="var(--accent)" stroke-width="2"/><text x="618" y="${Y(PAVG)-6}" text-anchor="end" style="fill:var(--accent)">média ${f2(PAVG)}</text>`;
+  POLLS.forEach(p=>{const x=X(+new Date(p.campo_fim)),y=Y(p.flavio_validos);g+=`<circle cx="${x}" cy="${y}" r="${p.ultima?4+p.w/sw*14:3}" fill="var(--f)" opacity="${p.ultima?.75:.25}"><title>${p.instituto} ${f2(p.flavio_validos)}</title></circle>`;if(p.flavio_pnad!=null&&p.ultima)g+=`<circle cx="${x}" cy="${Y(p.flavio_pnad)}" r="3.5" fill="none" stroke="var(--accent)" stroke-width="1.5"><title>${p.instituto} PNAD ${f2(p.flavio_pnad)}</title></circle>`});g+=`<line x1="50" x2="620" y1="${Y(PAVG_PNAD)}" y2="${Y(PAVG_PNAD)}" stroke="var(--accent)" stroke-dasharray="5 3"/><text x="618" y="${Y(PAVG_PNAD)-6}" text-anchor="end" style="fill:var(--accent)">PNAD ${f2(PAVG_PNAD)}</text>`;
   for(let d=d0+DAY;d<d1;d+=2*DAY){const s=new Date(d).toISOString();g+=`<text x="${X(d)}" y="210" text-anchor="middle">${s.slice(8,10)}/${s.slice(5,7)}</text>`}$("pChart").innerHTML=g}
 
-mark("Base");run();firstRound();pollsTab();showTab(location.hash.slice(1));
+mark("Base");run();firstRound();quint();$("qInd").onchange=quint;pollsTab();showTab(location.hash.slice(1));
 </script>
